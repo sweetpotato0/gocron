@@ -7,13 +7,14 @@ import (
 
 	macaron "gopkg.in/macaron.v1"
 
+	"gocron/internal/modules/app"
+	"gocron/internal/modules/logger"
+	"gocron/internal/modules/setting"
+
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/go-xorm/core"
 	"github.com/go-xorm/xorm"
 	_ "github.com/lib/pq"
-	"github.com/ouqiang/gocron/internal/modules/app"
-	"github.com/ouqiang/gocron/internal/modules/logger"
-	"github.com/ouqiang/gocron/internal/modules/setting"
 )
 
 type Status int8
@@ -68,6 +69,17 @@ func (model *BaseModel) parsePageAndPageSize(params CommonMap) {
 
 func (model *BaseModel) pageLimitOffset() int {
 	return (model.Page - 1) * model.PageSize
+}
+
+func (slack *Slack) Total(params CommonMap) (int64, error) {
+	session := Db.NewSession()
+	slack.parseWhere(session, params)
+	return session.Count(slack)
+}
+
+// 继承者重写这个方法就可以实现对Total得调用
+func (slack *Slack) parseWhere(session *xorm.Session, params CommonMap) {
+	return
 }
 
 // 创建Db

@@ -3,21 +3,19 @@ package service
 import (
 	"fmt"
 	"net/http"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
 
-	"github.com/ouqiang/goutil"
+	"gocron/internal/models"
+	"gocron/internal/modules/app"
+	"gocron/internal/modules/httpclient"
+	"gocron/internal/modules/logger"
+	"gocron/internal/modules/notify"
+	rpcClient "gocron/internal/modules/rpc/client"
+	pb "gocron/internal/modules/rpc/proto"
 
-	"github.com/jakecoffman/cron"
-	"github.com/ouqiang/gocron/internal/models"
-	"github.com/ouqiang/gocron/internal/modules/app"
-	"github.com/ouqiang/gocron/internal/modules/httpclient"
-	"github.com/ouqiang/gocron/internal/modules/logger"
-	"github.com/ouqiang/gocron/internal/modules/notify"
-	rpcClient "github.com/ouqiang/gocron/internal/modules/rpc/client"
-	pb "github.com/ouqiang/gocron/internal/modules/rpc/proto"
+	"github.com/sweetpotato0/cron/v3"
 )
 
 var (
@@ -106,7 +104,7 @@ type TaskResult struct {
 
 // 初始化任务, 从数据库取出所有任务, 添加到定时任务并运行
 func (task Task) Initialize() {
-	serviceCron = cron.New()
+	serviceCron = cron.New(cron.WithSeconds())
 	serviceCron.Start()
 	concurrencyQueue = ConcurrencyQueue{queue: make(chan struct{}, app.Setting.ConcurrencyQueue)}
 	taskCount = TaskCount{sync.WaitGroup{}, make(chan struct{})}
@@ -160,10 +158,7 @@ func (task Task) Add(taskModel models.Task) {
 		return
 	}
 
-	cronName := strconv.Itoa(taskModel.Id)
-	err := goutil.PanicToError(func() {
-		serviceCron.AddFunc(taskModel.Spec, taskFunc, cronName)
-	})
+	_, err := serviceCron.AddFunc(taskModel.Spec, taskFunc, cron.EntryID(taskModel.Id))
 	if err != nil {
 		logger.Error("添加任务到调度器失败#", err)
 	}
@@ -175,9 +170,8 @@ func (task Task) NextRunTime(taskModel models.Task) time.Time {
 		return time.Time{}
 	}
 	entries := serviceCron.Entries()
-	taskName := strconv.Itoa(taskModel.Id)
 	for _, item := range entries {
-		if item.Name == taskName {
+		if item.ID == cron.EntryID(taskModel.Id) {
 			return item.Next
 		}
 	}
@@ -191,7 +185,7 @@ func (task Task) Stop(ip string, port int, id int64) {
 }
 
 func (task Task) Remove(id int) {
-	serviceCron.RemoveJob(strconv.Itoa(id))
+	serviceCron.Remove(cron.EntryID(id))
 }
 
 // 等待所有任务结束后退出

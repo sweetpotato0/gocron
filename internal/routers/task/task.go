@@ -6,13 +6,14 @@ import (
 
 	"github.com/ouqiang/goutil"
 
+	"gocron/internal/models"
+	"gocron/internal/modules/logger"
+	"gocron/internal/modules/utils"
+	"gocron/internal/routers/base"
+	"gocron/internal/service"
+
 	"github.com/go-macaron/binding"
-	"github.com/jakecoffman/cron"
-	"github.com/ouqiang/gocron/internal/models"
-	"github.com/ouqiang/gocron/internal/modules/logger"
-	"github.com/ouqiang/gocron/internal/modules/utils"
-	"github.com/ouqiang/gocron/internal/routers/base"
-	"github.com/ouqiang/gocron/internal/service"
+	"github.com/sweetpotato0/cron/v3"
 	"gopkg.in/macaron.v1"
 )
 
@@ -152,7 +153,10 @@ func Store(ctx *macaron.Context, form TaskForm) string {
 
 	if taskModel.Level == models.TaskLevelParent {
 		err = goutil.PanicToError(func() {
-			cron.Parse(form.Spec)
+			specParser := cron.NewParser(
+				cron.Second | cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow,
+			)
+			specParser.Parse(form.Spec)
 		})
 		if err != nil {
 			return json.CommonFailure("crontab表达式解析失败", err)

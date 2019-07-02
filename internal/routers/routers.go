@@ -8,23 +8,24 @@ import (
 	"strings"
 	"time"
 
+	"gocron/internal/modules/app"
+	"gocron/internal/modules/logger"
+	"gocron/internal/modules/utils"
+	"gocron/internal/routers/host"
+	"gocron/internal/routers/install"
+	"gocron/internal/routers/loginlog"
+	"gocron/internal/routers/manage"
+	"gocron/internal/routers/task"
+	"gocron/internal/routers/tasklog"
+	"gocron/internal/routers/user"
+
 	"github.com/go-macaron/binding"
 	"github.com/go-macaron/gzip"
 	"github.com/go-macaron/toolbox"
-	"github.com/ouqiang/gocron/internal/modules/app"
-	"github.com/ouqiang/gocron/internal/modules/logger"
-	"github.com/ouqiang/gocron/internal/modules/utils"
-	"github.com/ouqiang/gocron/internal/routers/host"
-	"github.com/ouqiang/gocron/internal/routers/install"
-	"github.com/ouqiang/gocron/internal/routers/loginlog"
-	"github.com/ouqiang/gocron/internal/routers/manage"
-	"github.com/ouqiang/gocron/internal/routers/task"
-	"github.com/ouqiang/gocron/internal/routers/tasklog"
-	"github.com/ouqiang/gocron/internal/routers/user"
 	"github.com/rakyll/statik/fs"
 	"gopkg.in/macaron.v1"
 
-	_ "github.com/ouqiang/gocron/internal/statik"
+	_ "gocron/internal/statik"
 )
 
 const (
@@ -121,6 +122,8 @@ func Register(m *macaron.Macaron) {
 		m.Group("/webhook", func() {
 			m.Get("", manage.WebHook)
 			m.Post("/update", manage.UpdateWebHook)
+			m.Post("/add", manage.UpdateWebHook)
+			m.Post("/delete", manage.UpdateWebHook)
 		})
 		m.Get("/login-log", loginlog.Index)
 	})

@@ -3,9 +3,10 @@ package manage
 import (
 	"encoding/json"
 
-	"github.com/ouqiang/gocron/internal/models"
-	"github.com/ouqiang/gocron/internal/modules/logger"
-	"github.com/ouqiang/gocron/internal/modules/utils"
+	"gocron/internal/models"
+	"gocron/internal/modules/logger"
+	"gocron/internal/modules/utils"
+
 	"gopkg.in/macaron.v1"
 )
 
@@ -119,6 +120,26 @@ func WebHook(ctx *macaron.Context) string {
 }
 
 func UpdateWebHook(ctx *macaron.Context) string {
+	url := ctx.QueryTrim("url")
+	template := ctx.QueryTrim("template")
+	settingModel := new(models.Setting)
+	err := settingModel.UpdateWebHook(url, template)
+
+	return utils.JsonResponseByErr(err)
+}
+
+// AddWebHook 添加一个 webhook
+func AddWebHook(ctx *macaron.Context) string {
+	url := ctx.QueryTrim("url")
+	template := ctx.QueryTrim("template")
+	settingModel := new(models.Setting)
+	err := settingModel.UpdateWebHook(url, template)
+
+	return utils.JsonResponseByErr(err)
+}
+
+// DelWebHook 删除一个 webhook
+func DelWebHook(ctx *macaron.Context) string {
 	url := ctx.QueryTrim("url")
 	template := ctx.QueryTrim("template")
 	settingModel := new(models.Setting)
